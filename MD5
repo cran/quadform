@@ -1,0 +1,12 @@
+c108da68ce801fa9d1725ac9507d5541 *DESCRIPTION
+78b35acdd842def4b9d53e591ce8f14d *NAMESPACE
+074e49250a3df0fb9c1c08707bc48feb *R/quadform.R
+c31e38ebe173747c3c0cd8afb5ef1dc6 *README.md
+058d288c653d6b965d1d64085d40b24b *build/quadform.pdf
+8efd13461874a09c24a2de9f1d079f54 *build/stage23.rdb
+5ce56307342698572faee22b10046a4f *inst/quad_form_test.Rmd
+889abde9e951a0ccad03cbeed593e9fd *inst/quad_form_test.html
+4fc4335d77e243224211bf4bf7c2f708 *man/figures/quadform.png
+f1a1034c941c027d4a09b32c7888d640 *man/quad.form.Rd
+5ab6fe48d5c16b3b7476ab646d2d2241 *tests/testthat.R
+40fde0ef8ed23e13cbef7167c783646b *tests/testthat/test_aaa.R
