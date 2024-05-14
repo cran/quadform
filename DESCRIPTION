@@ -1,7 +1,7 @@
 Package: quadform
 Type: Package
 Title: Efficient Evaluation of Quadratic Forms
-Version: 0.0-1
+Version: 0.0-2
 Authors@R: person(given=c("Robin", "K. S."), family="Hankin", role = c("aut","cre"), email="hankin.robin@gmail.com", comment = c(ORCID = "0000-0001-5982-0415"))
 Depends: R (>= 3.0.1)
 Imports: mathjaxr
@@ -16,7 +16,7 @@ URL: https://github.com/RobinHankin/quadform
 BugReports: https://github.com/RobinHankin/quadform/issues
 RdMacros: mathjaxr
 NeedsCompilation: no
-Packaged: 2024-04-09 18:16:01 UTC; rhankin
+Packaged: 2024-05-14 06:38:23 UTC; rhankin
 Author: Robin K. S. Hankin [aut, cre] (<https://orcid.org/0000-0001-5982-0415>)
 Repository: CRAN
-Date/Publication: 2024-04-10 16:00:02 UTC
+Date/Publication: 2024-05-14 07:10:02 UTC

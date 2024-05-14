@@ -42,7 +42,7 @@ Direct R idiom would be:
 
 But `quadform` idiom is:
 
-    quad.form(quad.form.inv(quad.form.inv(A,H),H), Hx - quad.3form.inv(A,H,U))
+    quad.form(quad.form.inv(quad.form.inv(A,H),H), Hx - quad3.form.inv(A,H,U))
 
 and in terse form becomes:
 

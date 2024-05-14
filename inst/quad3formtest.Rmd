@@ -1,0 +1,243 @@
+---
+title: "quad3.form() speed tests"
+author: "Robin Hankin"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressMessages(library("quadform"))
+suppressMessages(library("cmvnorm"))
+set.seed(0)
+```
+
+```{r out.width='20%', out.extra='style="float:right; padding:10px"',echo=FALSE}
+knitr::include_graphics(system.file("help/figures/quadform.png", package = "quadform"))
+```
+
+This short document discusses some timing issues for in the `quadform`
+R package.  First we consider transposes and conjugates, then consider
+`%*%` and the `crossprod()` family, and finally bracketing and
+associativity in the context of the package.
+
+
+## Transpose
+
+Let's have a look at the time for a transpose:
+
+```{r makeM,cache=TRUE}
+n <- 10000
+system.time(M <- matrix(rcnorm(n*n),n,n))
+```   
+
+
+```{r maketimetranspose,cache=TRUE}
+ 
+f <- function(n){
+  M <- M[seq_len(n),seq_len(n)]
+  system.time(ignore <- t(M))[3]
+}
+
+
+```{r transposetimings,cache=TRUE}
+n <- 1000*(1:10)
+tim <- sapply(n,f)
+```
+
+```{r plottimings}
+plot(n,tim)
+plot(log(n),log(tim))
+summary(lm(log(tim)~log(n),offset=0*log(n)))
+```
+
+Above we see that taking a transpose is ${\mathcal O}(n^{2+\delta})$
+where $\delta\simeq 0.145$.
+
+## Conjugate
+ 
+```{r maketimeconjugate,cache=TRUE}
+ 
+f <- function(n){
+  M <- M[seq_len(n),seq_len(n)]
+  system.time(ignore <- Conj(M))[3]
+}
+
+n <- 1000*(1:9)
+tim <- sapply(n,f)
+```
+
+```{r plottimingsofconj}
+x <- log(n/1000)
+y <- log(tim)
+plot(x,y)
+fit <- lm(y~x)
+abline(fit)
+summary(fit)
+summary(lm(y~x))
+```
+
+So a call to `Conj()` appears to be ${\mathcal O}(n^{1.84})$ which is
+surprising as it is difficult to imagine it being less than ${\mathcal
+O}(n^2)$.  
+
+## Timings for matrix multiplication
+
+OK now how about `crossprod()`, `tcrossprod()`, and `%*%`:
+
+```{r timecprodtcprodtimes,cache=TRUE}
+f1 <- function(n){
+  M <- M[seq_len(n),seq_len(n)]
+  c(
+  crossprod  = system.time(ignore <- crossprod(M))[3] ,
+  cprod      = system.time(ignore <- cprod(M))[3]     ,
+  tcrossprod = system.time(ignore <- tcrossprod(M))[3],
+  tcprod     = system.time(ignore <- tcprod(M))[3]    ,
+  mult       = system.time(ignore <- M%*%M)[3]
+  )
+}
+nw <- 100*(2:9)
+mat <- sapply(nw,f1)
+```
+
+```{r plotmat}
+matplot(nw,t(mat),type='b',log='xy',lty=1)
+mat
+#summary(lm(log(mat[1,])~log(nw),offset=log(nw)*log(7)/log(2)))
+#summary(lm(log(mat[2,])~log(nw),offset=log(nw)*log(7)/log(2)))
+#summary(lm(log(mat[3,])~log(nw),offset=log(nw)*log(7)/log(2)))
+#summary(lm(log(mat[4,])~log(nw),offset=log(nw)*log(7)/log(2)))
+#summary(lm(log(mat[5,])~log(nw),offset=log(nw)*log(7)/log(2)))
+
+D <-
+data.frame(do.call("rbind",sapply(seq_len(5),function(i){cbind(lnw=log(nw),prod=i,logtime=log(mat[i,]))},simplify=FALSE)))
+head(D)
+summary(aov(logtime~lnw*as.factor(prod),data=D))
+```
+
+above we see no evidence for the slopes differing between the
+different types of product.  We can now see whether that slope is
+different from $\log_2(7)$:
+
+```{r}
+summary(lm(logtime~lnw+as.factor(prod),data=D,offset=lnw*log(7)/log(2)))
+```
+
+We see that the slopes do not significantly differ, and all are (as
+far as we can tell) equal to the Strassen value of $\log_2(7)\simeq
+2.81$.
+
+## Comparison: transpose, conjugate, matrix multiplication
+
+
+```{r comparetransposeandconjetc, cache=TRUE}
+f <- function(n){
+  M <- matrix(rcnorm(n*n),n,n)
+  c(
+  t         = unname(system.time(ignore <- t(M))[3]),
+  Conj      = unname(system.time(ignore <- Conj(M))[3]),
+  crossprod = unname(system.time(ignore <- crossprod(M))[3]),
+  cprod     = unname(system.time(ignore <- cprod(M))[3])
+  )
+}
+
+rbind(`1000` = f(100),`2000` = f(2000), `3000`= f(3000))
+```
+
+Above we see that the time taken for a transpose and a conjugate is
+negligible for this size matrix.  Recall that transpose is ${\mathcal
+O}(n^{2.3})$, conjugate is ${\mathcal O}(n^2)$ and multiplication is
+${\mathcal O}(n^{2.81})$.
+
+
+## Associativity: order of multiplication
+
+```{r showquad3form}
+quad3.form
+```
+
+
+We can see that, in evaluating $\mathbf{l}^*M\mathbf{r}$ function
+`quad3.form()` brackets on the left, as in $(\mathbf{l^*}
+M)\mathbf{r}$ [as opposed to on the right,
+$\mathbf{l^*}(M\mathbf{r})$].  Is this important from a timing
+perspective?
+
+Thinking about associativity in general we have matrices $X_{[a\times
+b]}, Y_{[b\times b]}, C_{[b\times c]}$ [the middle matrix is square].
+Calculating $(XY)Z$ is of order $ab^2+abc$ and $X(YZ)$ is $b^2c+abc$,
+so the difference $[(XY)Z]-[X(YZ)]$ is just $b^2(a-c)$.  So if $a>c$
+we are better off doing $X(YZ)$ and if $a<c$ we should do $(XY)Z$.
+Note that the transpose complicates matters.
+
+
+```{r checkassocquadform,cache=TRUE}
+timings <- function(a,b,c){
+  X <- matrix(rcnorm(a*b),a,b)
+  Y <- matrix(rcnorm(b*b),b,b)
+  Z <- matrix(rcnorm(b*c),b,c)
+  print(system.time(ignore <- (X%*%Y)%*%Z))
+  print(system.time(ignore <- X%*%(Y%*%Z)))
+}
+timings(7,5000,41)
+timings(41,5000,7)
+```
+
+So the order estimates above look at least approximately correct.
+
+
+```{r tryquadform,cache=TRUE}
+a <- 61
+b <- 7000
+c <- 19
+r <- matrix(rcnorm(a*b),b,a)
+M <- matrix(rcnorm(b*b),b,b)
+l <- matrix(rcnorm(c*b),b,c)
+c(
+max(abs(quad3.form(M,l,r) - crossprod(crossprod(M,Conj(l)),r))),
+max(abs(quad3.form(M,l,r) - cprod(l,M) %*% r)),
+max(abs(quad3.form(M,l,r) - tcrossprod(crossprod(Conj(l),M),t(r)))),
+max(abs(quad3.form(M,l,r) - (ht(l) %*% M) %*% r)),
+max(abs(quad3.form(M,l,r) - ht(l) %*% (M %*% r))),
+max(abs(quad3.form(M,l,r) - cprod(l, (M %*% r))))
+)
+```
+
+OK so above we see that `crossprod(crossprod(M,Conj(l)))` and the
+others such as `cprod(l,M) %*% r` are [mathematically] identical, at
+least up to numerical precision.  What about their run speeds?
+
+```{r definetimef}
+timef <- function(M,l,r){
+c(
+ignore=unname(system.time(ig <- quad3.form(M,l,r))[3]),
+  a =  unname(system.time(ig <- crossprod(crossprod(M,Conj(l)),r))[3]), 
+  b =  unname(system.time(ig <- cprod(l,M) %*% r)[3]), 
+  c =  unname(system.time(ig <- tcrossprod(crossprod(Conj(l),M),t(r)))[3]), 
+  d =  unname(system.time(ig <- (ht(l) %*% M) %*% r)[3]), 
+  e =  unname(system.time(ig <- ht(l) %*% (M %*% r))[3]), 
+  f =  unname(system.time(ig <- cprod(l, (M %*% r)))[3])
+)
+}
+```
+
+(letters `a`-`f` are just for convenience).  Above, the first element
+returned is ignored (this is a burn-in evaluation, it always takes
+longer than the other executions).
+
+```{r timefMlr,cache = TRUE}
+`colnames<-`(rbind(M=dim(M),l=dim(l),r=dim(r)),c("rows","cols"))
+timef(M,l,r)
+```
+
+Above, remember that `M` is $7000\times 7000$, `l` is $19\times 7000$
+and `r` is $61\times 7000$; we have $a=19$ and $c=61$.  So because
+$a<c$ we should bracket as $(XY)Z$.  All of the products are bracketed
+like that, except the last two (`e` and `f`), and we see that that
+those are the slowest (by a factor of about 3).  We can try swapping
+`l` and `r` and seeing if the results change:
+
+```{r timeMrl,cache = TRUE}
+timef(M,r,l)
+```
+
+Above we see as expected that the last two products are the fastest.

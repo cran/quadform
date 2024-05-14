@@ -1,9 +1,6 @@
 ## This file follows the structure of aaa.R in the free group package.
 
-## Define some checker functions, and call them at the end.  They
-## should all return TRUE if the package works, and stop with error if
-## a test is failed.  Function checker1() has one argument, checker2()
-## two, and checker3() has three.  
+## Define a checker function, and call it at the end.  
 
 test_that("Test suite aaa.R",{
 
@@ -23,19 +20,23 @@ checker <- function(M,x,y,x1,y1){
     tester(tcprod(x,x1)         , x %*% ht(x1))
     tester(quad.form(M,x)       , ht(x) %*% M %*% x)
     tester(quad.form(solve(M),x), ht(x) %*% solve(M) %*% x)
-    tester(quad.3form(M,x,x1)   , ht(x) %*% M %*% x1)
-    tester(quad.3form.inv(M,x,x1)   , ht(x) %*% solve(M) %*% x1)
-    tester(quad.3tform(M,y,y1)  , y %*% M %*% ht(y1))
+    tester(quad3.form(M,x,x1)   , ht(x) %*% M %*% x1)
+    tester(quad3.form.inv(M,x,x1)   , ht(x) %*% solve(M) %*% x1)
+    tester(quad3.tform(M,y,y1)  , y %*% M %*% ht(y1))
     tester(quad.tform(M,y)      , y %*% M %*% ht(y))
     tester(quad.tform.inv(M,y)  , y %*% solve(M) %*% ht(y))
     tester(quad.diag(M,x)       , diag(ht(x) %*% M %*% x))
     tester(quad.diag(M,x)       , diag(quad.form(M,x)))
     tester(quad.tdiag(M,y)      , diag(y %*% M %*% ht(y)))
     tester(quad.tdiag(M,y)      , diag(quad.tform(M,y)))
-    tester(quad.3diag(M,x,x1)   , diag(ht(x) %*% M %*% x1))
-    tester(quad.3diag(M,x,x1)   , diag(quad.3form(M,x,x1)))
-    tester(quad.3tdiag(M,y,y1)  , diag(y %*% M %*% ht(y1)))
-    tester(quad.3tdiag(M,y,y1)  , diag(quad.3tform(M,y,y1)))
+    tester(quad3.diag(M,x,x1)   , diag(ht(x) %*% M %*% x1))
+    tester(quad3.diag(M,x,x1)   , diag(quad3.form(M,x,x1)))
+    tester(quad3.tdiag(M,y,y1)  , diag(y %*% M %*% ht(y1)))
+    tester(quad3.tdiag(M,y,y1)  , diag(quad3.tform(M,y,y1)))
+    tester(quad.trace(M,x)      , sum(quad.diag(M,x)))
+    tester(quad.ttrace(M,y)     , sum(quad.tdiag(M,y)))
+    tester(quad.trace(M,x)      , sum(diag(quad.form(M,x))))
+    tester(quad.ttrace(M,y)     , sum(diag(quad.tform(M,y))))
 
     if(is.numeric(M)){# should be "is.real"
         M <- cprod(M) # to ensure positive-definiteness

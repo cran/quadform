@@ -1,16 +1,23 @@
 \name{quad.form}
 \alias{quad.form}
+\alias{quadform}
 \alias{quad.form.inv}
 \alias{quad.form.chol}
-\alias{quad.3form}
-\alias{quad.3form.inv}
+\alias{quad3.form}
+\alias{quad3.form_ab}
+\alias{quad3.form_bc}
+\alias{quad3.form.inv}
 \alias{quad.tform}
-\alias{quad.3tform}
+\alias{quad3.tform}
+\alias{quad3.tform_ab}
+\alias{quad3.tform_bc}
 \alias{quad.tform.inv}
 \alias{quad.diag}
 \alias{quad.tdiag}
-\alias{quad.3diag}
-\alias{quad.3tdiag}
+\alias{quad3.diag}
+\alias{quad3.tdiag}
+\alias{quad.trace}
+\alias{quad.ttrace}
 \alias{cprod}
 \alias{tcprod}
 \alias{ht}
@@ -27,118 +34,93 @@
 \alias{qtd}
 \alias{q3d}
 \alias{q3td}
+\alias{qtr}
+\alias{qttr}
 
 \title{Evaluate a quadratic form efficiently}
 \description{\loadmathjax
   
-  Given a square matrix \eqn{M} of size \eqn{n\times n}{n*n}, and a
-  matrix \eqn{x} of size \eqn{n\times p}{n*p} (or a vector of length
-  \eqn{n}), evaluate various quadratic forms.
+  Given a square matrix \mjseqn{M} of size \mjeqn{n\times n}{n*n}, and a
+  matrix \mjseqn{x} of size \mjeqn{n\times p}{n*p} (or a vector of length
+  \mjseqn{n}), evaluate various quadratic forms.
 
-  (in the following, \eqn{x^T}{t(x)} denotes the complex conjugate of
-  the transpose, also known as the Hermitian transpose.  This only
-  matters when considering complex numbers).
-  
+  The archetype is \code{quad.form(M,x)} for real or complex square
+  matrix \code{M} and vector or matrix \code{x}.  This evaluates
+  \verb{Conj(t(x)) \%*\% M \%*\% x} but using
+  \code{crossprod(crossprod(M,Conj(x)),x)} thus avoiding taking a
+  needless transpose.
+
+
 }
 \usage{
 quad.form(M, x)
 quad.form.inv(M, x)
 quad.form.chol(chol,x)
 quad.tform(M, x)
-quad.3form(M,left,right)
-quad.3tform(M,left,right)
+quad3.form(M,left,right)
+quad3.tform(M,left,right)
 quad.tform.inv(M,x)
 quad.diag(M,x)
 quad.tdiag(M,x)
-quad.3diag(M,left,right)
-quad.3tdiag(M,left,right)
+quad3.diag(M,left,right)
+quad3.tdiag(M,left,right)
 cprod(x,y)
 tcprod(x,y)
 ht(x)
 }
 \arguments{
-  \item{M}{Square matrix of size \eqn{n\times n}{n*n}}
-  \item{x,y}{Matrix of size \eqn{n\times p}{n*p}, or vector of length \eqn{n}}
+  \item{M}{Square matrix of size \mjeqn{n\times n}{n*n}}
+  \item{x,y}{Matrix of size \mjeqn{n\times p}{n*p}, or vector of length \mjseqn{n}}
   \item{chol}{Lower triangular Cholesky decomposition
     of the quadratic form, see details}
-  \item{left,right}{In function \code{quad.3form()}, matrices with
-    \eqn{n} rows and arbitrary number of columns}
+  \item{left,right}{In function \code{quad3.form()}, matrices with
+    \mjseqn{n} rows and arbitrary number of columns}
 }
 \details{
 
-  \itemize{
+  \tabular{llll}{\cr
+  \code{ht(x)}\tab\mjeqn{\mathbf{x}^{*}=\overline{\mathbf{x}^{\scriptscriptstyle T}}}{omitted}
+  \tab\code{Conj(t(x))}\tab\code{ht(x)}\cr
+  \code{cprod(x,y)}\tab\mjeqn{\mathbf{x}^{*}\mathbf{y}}{omitted}
+  \tab\verb{ht(x) \%*\% y}\tab\code{cp()}\cr
+  \code{tcprod(x,y)}\tab\mjeqn{\mathbf{x}\mathbf{y}^{*}}{omitted}
+  \tab\verb{x \%*\% ht(y)}\tab\code{tcp()}\cr
+  \code{quad.form(M,x)}\tab\mjeqn{\mathbf{x}^{*}M\mathbf{x}}{omitted}
+  \tab\verb{ht(x) \%*\% M \%*\% x}\tab\code{qf()}\cr
+  \code{quad.form.inv(M,x)}\tab\mjeqn{\mathbf{x}^{*}M^{-1}\mathbf{x}}{omitted}
+  \tab\verb{ht(x) \%*\% solve(M) \%*\% x}\tab\code{qfi()}\cr
+  \code{quad.tform(M,x)}\tab\mjeqn{\mathbf{x}M\mathbf{x}^{*}}{omitted}
+  \tab\verb{x \%*\% A \%*\% ht(x)}\tab\code{qt()}\cr
+  \code{quad.tform.inv(M,x)}\tab\mjeqn{\mathbf{x}M^{-1}\mathbf{x}^{*}}{omitted}
+  \tab\verb{x \%*\% solve(M) \%*\% ht(x)}\tab\code{qti()}\cr
+  \code{quad3.form(M,l,r)}\tab\mjeqn{\mathbf{l}^{*}M\mathbf{r}}{omitted}
+  \tab\verb{t(l) \%*\% M \%*\% r}\tab\code{q3()}\cr
+  \code{quad3.form.inv(M,l,r)}\tab\mjeqn{\mathbf{l}^{*}M^{-1}\mathbf{r}}{omitted}
+  \tab\verb{t(l) \%*\% solve(M) \%*\% r}\tab\code{q3i()}\cr
+  \code{quad3.tform(M,l,r)}\tab\mjeqn{\mathbf{l}M\mathbf{r}^{*}}{omitted}
+  \tab\verb{l \%*\% M \%*\% t(r)}\tab\code{q3t()}\cr
+  \code{quad.diag(M,x)}\tab\mjeqn{\operatorname{diag}(\mathbf{x}^{*}M\mathbf{x})}{omitted}
+  \tab\verb{diag(quad.form(M,x))}\tab\code{qd()}\cr
+  \code{quad.tdiag(M,x)}\tab\mjeqn{\operatorname{diag}(\mathbf{x}M\mathbf{x}^{*})}{omitted}
+  \tab\verb{diag(quad.tform(M,x))}\tab\code{qtd()}\cr
+  \code{quad3.diag(M,l,r)}\tab\mjeqn{\operatorname{diag}(\mathbf{l}^{*}M\mathbf{r})}{omitted}
+  \tab\code{diag(quad3.form(M,l,r))}\tab\code{q3d()}\cr
+  \code{quad3.tdiag(M,l,r)}\tab\mjeqn{\operatorname{diag}(\mathbf{l}M\mathbf{r}^{*})}{omitted}
+  \tab\code{diag(quad3.tform(M,l,r))}\tab\code{q3td()}\cr
+  \code{quad.trace(M,x)}\tab\mjeqn{\operatorname{tr}(\mathbf{x}^{*}M\mathbf{x})}{omitted}
+  \tab\code{tr(quad.form(M,x))}\tab\code{qt()}\cr
+  \code{quad.ttrace(M,x)}\tab\mjeqn{\operatorname{tr}(\mathbf{x}M\mathbf{x}^{*})}{omitted}
+  \tab\code{tr(quad.tform(M,x))}\tab\code{qtt()}
+}
 
-  \item Function \code{quad.form(M,x)} evaluates \eqn{x^TMx}{t(x) \%*\%
-    M \%*\% x} in an efficient manner [terse form \code{qf()}]
-    
-    \item Function \code{quad.form.inv(M,x)} returns
-      \eqn{x^TM^{-1}x}{t(x) \%*\% solve(M) \%*\% x} using an efficient
-      method that avoids inverting \eqn{M} [terse form \code{qfi()}]
-    
-    \item Function \code{quad.tform(M,x)} returns \eqn{xMx^T}{x \%*\% A
-      \%*\% t(x)} using \code{tcrossprod()} without taking
-      a transpose [\code{qt()}]
-
-    \item Function \code{quad.tform.inv(M,x)} returns \eqn{xM^{-1}x^T}{x
-      \%*\% solve(M) \%*\% t(x)}, although a single transpose is needed
-      [\code{qti()}]
-
-    \item Function \code{quad.3form(M,l,r)} returns \eqn{l^TMr}{t(l)
-      \%*\% M \%*\% r} using nested calls to \code{crossprod()}.  It's
-    no faster than calling \code{crossprod()} directly, but makes code
-    neater and less error-prone (IMHO) [\code{q3()}]
-
-    \item Function \code{quad.3form.inv(M,l,r)} returns
-      \eqn{l^TM^{-1}r}{t(l) \%*\% solve(M) \%*\% r} [\code{q3i()}]
-
-    \item Function \code{quad.3tform(M,l,r)} returns \eqn{lMr^T}{l \%*\%
-      M \%*\% t(r)} using nested calls to \code{tcrossprod()}.  Again,
-    this is to make for neater code [\code{q3t()}]
-    
-    \item Function \code{quad.diag(M,x)} returns the \emph{diagonal} of
-    the (potentially very large) square matrix \code{quad.form(M,x)}
-    without calculating the off diagonal elements [\code{qd()}]
-    
-    \item Function \code{quad.tdiag(M,x)} similarly returns the diagonal of
-    \code{quad.tform(M,x)} [\code{qtd()}]
-
-    \item Function \code{quad.3diag(M,l,r)} returns the diagonal of
-    \code{quad.3form(M,l,r)} [\code{q3d()}]
-
-    \item Function \code{quad.3tdiag(M,l,r)} returns the diagonal of
-    \code{quad.3tform(M,l,r)} [\code{q3td()}]
-
-    \item Function \code{quad.form.chol()} interprets argument
-    \code{chol} as the lower triangular Cholesky decomposition of the
-    quadratic form.  Remember that \code{M.lower \%*\% M.upper == M},
-    and \code{chol()} returns the upper triangular matrix, so one needs
-    to use the transpose \code{t(chol(M))} in calls.
-    }
-    
-  These functions invoke the following lower-level calls:
-  
-  \itemize{
-    \item Function \code{ht(x)} returns the Hermitian transpose, that is,
-    the complex conjugate of the transpose, sometimes written \eqn{x^*}
-
-    \item Function \code{cprod(x,y)} returns \eqn{x^T y}{t(x) \%*\% y},
-    equivalent to \code{crossprod(Conj(x),y)} [\code{cp()}]
-    
-    \item Function \code{tcprod(x,y)} returns \eqn{x y^T}{x \%*\% t(y)},
-    equivalent to \code{crossprod(x,Conj(y))} [\code{tcp()}]
-  }
-   
-  Note again that in the calls above, \dQuote{transpose} [that is,
-  \eqn{x^T}{t(x)}] means \dQuote{Conjugate transpose}, or the Hermitian
-  transpose.
-  
-
-
+\strong{In the above, \mjeqn{\mathbf{x}^{*}}{ht(x)} denotes the
+  \emph{complex conjugate} of the transpose, also known as the Hermitian
+  transpose} (this only matters when considering complex numbers).
 
   These various functions generally avoid taking needless expensive
   transposes in favour of using nested \code{crossprod()} and
   \code{tcrossprod()} calls.  For example, the \dQuote{meat} of
-  \code{quad.form()} is just \code{crossprod(crossprod(M,Conj(x)),x)}
+  \code{quad.form()} is just \code{crossprod(crossprod(M,Conj(x)),x)}.
 
   Functions such as \code{quad.form.inv()} avoid taking a matrix
   inverse.  The meat of \code{quad.form.inv()}, for example, is
@@ -146,17 +128,56 @@ ht(x)
   \dQuote{Never invert a matrix unless absolutely necessary}.  But I
   have \emph{never} seen a case where \code{quad.form.inv(M,x)} is
   faster than \code{quad.form(solve(M),x)}.
+
+  One motivation for the package is to return consistent results with
+  complex arguments.  Note, for example, that
+  \code{base::crossprod(x,y)} evaluates \verb{t(x) \%*\% y} and not, as
+  one would almost always want, \verb{Conj(t(x)) \%*\% y}.  Function
+  \code{cprod()}, unlike \code{crossprod()}, is consistent and returns
+  \verb{Conj(t(x)) \%*\% y} [or \verb{ht(x) \%*\% y}]; internally it is
+  essentially \verb{crossprod(Conj(x), y)}.
   
-  If the Cholesky decomposition of \code{M} is available, then using
-  \code{quad.form.chol()} and supplying \code{chol((M)} should generally
-  be faster (for large matrices) than calling \code{quad.form()} and
-  using \code{M} directly.  The time saving is negligible for matrices
-  smaller than about \eqn{50\times 50}{50*50}, even if the overhead of
-  computing the decomposition is ignored.
+  Function \code{quad.form.chol()} interprets argument \code{chol} as
+  the lower triangular Cholesky decomposition of the quadratic form.
+  Remember that \code{M.lower \%*\% M.upper == M}, and \code{chol()}
+  returns the upper triangular matrix, so one needs to use the transpose
+  \code{t(chol(M))} in calls.  If the Cholesky decomposition of \code{M}
+  is available, then using \code{quad.form.chol()} and supplying
+  \code{chol(M)} should generally be faster (for large matrices) than
+  calling \code{quad.form()} and using \code{M} directly.  The time
+  saving is negligible for matrices smaller than about \eqn{50\times
+  50}{50*50}, even if the overhead of computing the decomposition is
+  ignored.
+
+  Functions \code{quad3.foo()} take three arguments: a matrix \code{M}
+  and two other vectors \code{l} and \code{r} [or \code{left} and
+  \code{right}].  For these functions, \code{M} is not necessarily
+  square although of course the matrices have to be compatible.
+
+  Functions \code{quad3.form_ab()} and \code{quad3.form_bc()} are helper
+  functions not really intended for the end-user.  They return
+  mathematically identical results but differ in the bracketing order of
+  their operations: \code{quad3.form_ab(M,l,r)} returns
+  \mjeqn{\left(\mathbf{l}^*M\right)\mathbf{r}}{omitted} and
+  \code{quad3.form_bc(M,l,r)} returns
+  \mjeqn{\mathbf{l}^{*}\left(M\mathbf{r}\right)}{omitted}.  The mnemonic
+  for their names is derived from the first multiplication when
+  calculating \mjseqn{(ab)c} and \mjseqn{a(bc)}.  Note that
+  \code{quad3.form_ab(M,l,r)} returns
+  \verb{crossprod(crossprod(M,Conj(l)),r)} rather than the
+  mathematically equivalent \verb{cprod(cprod(M,l),r)} on efficiency
+  grounds (only a single conjugate is taken).
+
+  Function \code{quad3.form()} dispatches to either
+  \code{quad3.form_ab()} or \code{quad3.form_bc()} depending on the
+  dimensions of its argument as per the efficiency discussion at
+  \code{inst/quadform3test.Rmd}.  Similar considerations apply to
+  \code{quad3.tform()}, \code{quad3.tform_ab()}, and
+  \code{quad3.tform_bc()}.
 
   Terse forms [\code{qf()} for \code{quad.form()}, \code{qti()} for
-  \code{quad.tform.inv()}, etc] are provided for the perl golfers among
-  us.
+  \code{quad.tform.inv()}, etc] are provided for the \proglang{perl}
+  golfers among us.
 
 }
 
@@ -167,14 +188,15 @@ ht(x)
 \author{Robin K. S. Hankin}
 
 \note{
+
  These functions are used extensively in the \CRANpkg{emulator} and
-  \CRANpkg{calibrator} packages, primarily in the interests of elegant
-  code, but also speed.  For the problems I usually consider, the
-  speedup (of \code{quad.form(M,x)} over \code{t(x) \%*\% M \%*\% x},
-  say) is marginal at best.
+ \CRANpkg{calibrator} packages, primarily in the interests of elegant
+ code, but also speed.  For the problems I usually consider, the speedup
+ (of \code{quad.form(M,x)} over \verb{t(x) \%*\% M \%*\% x}, say) is
+ marginal at best.
+  
 }
 
-\seealso{\code{\link{optimize}}}
 \examples{
 jj <- matrix(rnorm(80),20,4)
 M <- crossprod(jj,jj)
